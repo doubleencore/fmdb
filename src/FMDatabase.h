@@ -46,25 +46,7 @@
 #endif
 
 
-@interface FMDatabase : NSObject  {
-    
-    sqlite3*            _db;
-    NSString*           _databasePath;
-    BOOL                _logsErrors;
-    BOOL                _crashOnErrors;
-    BOOL                _traceExecution;
-    BOOL                _checkedOut;
-    BOOL                _shouldCacheStatements;
-    BOOL                _isExecutingStatement;
-    BOOL                _inTransaction;
-    int                 _busyRetryTimeout;
-    
-//    NSMutableDictionary *_cachedStatements;
-    NSMutableSet        *_openResultSets;
-    NSMutableSet        *_openFunctions;
-
-}
-
+@interface FMDatabase : NSObject
 
 @property (atomic, assign) BOOL traceExecution;
 @property (atomic, assign) BOOL checkedOut;
@@ -72,6 +54,14 @@
 @property (atomic, assign) BOOL crashOnErrors;
 @property (atomic, assign) BOOL logsErrors;
 @property (atomic, retain) NSMutableDictionary *cachedStatements;
+
+@property (nonatomic) sqlite3 *db;
+@property (nonatomic) NSString *databasePath;
+@property (nonatomic) BOOL shouldCacheStatements;
+@property (nonatomic) BOOL isExecutingStatement;
+@property (nonatomic) BOOL inTransaction;
+@property (nonatomic) NSMutableSet *openResultSets;
+@property (nonatomic) NSMutableSet *openFunctions;
 
 
 + (id)databaseWithPath:(NSString*)inPath;
@@ -138,15 +128,11 @@
 
 @end
 
-@interface FMStatement : NSObject {
-    sqlite3_stmt *_statement;
-    NSString *_query;
-    long _useCount;
-}
+@interface FMStatement : NSObject
 
-@property (atomic, assign) long useCount;
-@property (atomic, retain) NSString *query;
-@property (atomic, assign) sqlite3_stmt *statement;
+@property (nonatomic, assign) long useCount;
+@property (nonatomic, retain) NSString *query;
+@property (nonatomic, assign) sqlite3_stmt *statement;
 
 - (void)close;
 - (void)reset;

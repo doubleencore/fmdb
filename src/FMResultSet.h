@@ -16,18 +16,15 @@
 @class FMDatabase;
 @class FMStatement;
 
-@interface FMResultSet : NSObject {
-    FMDatabase          *_parentDB;
-    FMStatement         *_statement;
-    
-    NSString            *_query;
-    NSMutableDictionary *_columnNameToIndexMap;
-    BOOL                _columnNamesSetup;
-}
+@interface FMResultSet : NSObject
 
-@property (atomic, retain) NSString *query;
-@property (atomic, retain) NSMutableDictionary *columnNameToIndexMap;
-@property (atomic, retain) FMStatement *statement;
+@property (atomic) NSString *query;
+@property (atomic) NSMutableDictionary *columnNameToIndexMap;
+@property (atomic) FMStatement *statement;
+
+@property (nonatomic) FMDatabase *parentDB;
+@property (nonatomic) BOOL columnNamesSetup;
+
 
 + (id)resultSetWithStatement:(FMStatement *)statement usingParentDatabase:(FMDatabase*)aDB;
 

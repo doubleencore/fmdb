@@ -13,16 +13,13 @@
 @end
 
 @implementation FMResultSet
-@synthesize query=_query;
-@synthesize columnNameToIndexMap=_columnNameToIndexMap;
-@synthesize statement=_statement;
 
 + (id)resultSetWithStatement:(FMStatement *)statement usingParentDatabase:(FMDatabase*)aDB {
     
     FMResultSet *rs = [[FMResultSet alloc] init];
     
-    [rs setStatement:statement];
-    [rs setParentDB:aDB];
+    rs.statement = statement;
+    rs.parentDB = aDB;
     
     return FMDBReturnAutoreleased(rs);
 }
@@ -64,7 +61,7 @@
 - (void)setupColumnNames {
     
     if (!_columnNameToIndexMap) {
-        [self setColumnNameToIndexMap:[NSMutableDictionary dictionary]];
+        self.columnNameToIndexMap = [NSMutableDictionary dictionary];
     }    
     
     int columnCount = sqlite3_column_count([_statement statement]);

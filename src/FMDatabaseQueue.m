@@ -16,10 +16,15 @@
  something in dispatch_sync
  
  */
- 
+
+@interface FMDatabaseQueue ()
+
+@end
+
+
+
 @implementation FMDatabaseQueue
 
-@synthesize path = _path;
 
 + (id)databaseQueueWithPath:(NSString*)aPath {
     

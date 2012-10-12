@@ -11,13 +11,11 @@
 
 @class FMDatabase;
 
-@interface FMDatabaseQueue : NSObject {
-    NSString            *_path;
-    dispatch_queue_t    _queue;
-    FMDatabase          *_db;
-}
+@interface FMDatabaseQueue : NSObject
 
-@property (atomic, retain) NSString *path;
+@property (atomic) NSString *path;
+@property (nonatomic) dispatch_queue_t queue;
+@property (nonatomic) FMDatabase *db;
 
 + (id)databaseQueueWithPath:(NSString*)aPath;
 - (id)initWithPath:(NSString*)aPath;

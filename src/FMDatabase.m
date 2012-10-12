@@ -9,12 +9,6 @@
 @end
 
 @implementation FMDatabase
-@synthesize cachedStatements=_cachedStatements;
-@synthesize logsErrors=_logsErrors;
-@synthesize crashOnErrors=_crashOnErrors;
-@synthesize busyRetryTimeout=_busyRetryTimeout;
-@synthesize checkedOut=_checkedOut;
-@synthesize traceExecution=_traceExecution;
 
 + (id)databaseWithPath:(NSString*)aPath {
     return FMDBReturnAutoreleased([[self alloc] initWithPath:aPath]);
@@ -166,7 +160,7 @@
     for (NSValue *rsInWrappedInATastyValueMeal in openSetCopy) {
         FMResultSet *rs = (FMResultSet *)[rsInWrappedInATastyValueMeal pointerValue];
         
-        [rs setParentDB:nil];
+        rs.parentDB = nil;
         [rs close];
         
         [_openResultSets removeObject:rsInWrappedInATastyValueMeal];
@@ -187,7 +181,7 @@
     
     query = [query copy]; // in case we got handed in a mutable string...
     
-    [statement setQuery:query];
+    statement.query = query;
     
     [_cachedStatements setObject:statement forKey:query];
     
@@ -632,7 +626,7 @@
     
     if (!statement) {
         statement = [[FMStatement alloc] init];
-        [statement setStatement:pStmt];
+        statement.statement = pStmt;
         
         if (_shouldCacheStatements) {
             [self setCachedStatement:statement forQuery:sql];
@@ -641,12 +635,12 @@
     
     // the statement gets closed in rs's dealloc or [rs close];
     rs = [FMResultSet resultSetWithStatement:statement usingParentDatabase:self];
-    [rs setQuery:sql];
+    rs.query = sql;
     
     NSValue *openResultSet = [NSValue valueWithNonretainedObject:rs];
     [_openResultSets addObject:openResultSet];
     
-    [statement setUseCount:[statement useCount] + 1];
+    statement.useCount = [statement useCount] + 1;
     
     FMDBRelease(statement); 
     
@@ -867,7 +861,7 @@
     if (_shouldCacheStatements && !cachedStmt) {
         cachedStmt = [[FMStatement alloc] init];
         
-        [cachedStmt setStatement:pStmt];
+        cachedStmt.statement = pStmt;
         
         [self setCachedStatement:cachedStmt forQuery:sql];
         
@@ -877,7 +871,7 @@
     int closeErrorCode;
     
     if (cachedStmt) {
-        [cachedStmt setUseCount:[cachedStmt useCount] + 1];
+        cachedStmt.useCount = [cachedStmt useCount] + 1;
         closeErrorCode = sqlite3_reset(pStmt);
     }
     else {
@@ -1057,20 +1051,16 @@
 #endif
 
 
-- (BOOL)shouldCacheStatements {
-    return _shouldCacheStatements;
-}
-
 - (void)setShouldCacheStatements:(BOOL)value {
     
     _shouldCacheStatements = value;
     
     if (_shouldCacheStatements && !_cachedStatements) {
-        [self setCachedStatements:[NSMutableDictionary dictionary]];
+        self.cachedStatements = [NSMutableDictionary dictionary];
     }
     
     if (!_shouldCacheStatements) {
-        [self setCachedStatements:nil];
+        self.cachedStatements = nil;
     }
 }
 
@@ -1108,9 +1098,6 @@ void FMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlite3
 
 
 @implementation FMStatement
-@synthesize statement=_statement;
-@synthesize query=_query;
-@synthesize useCount=_useCount;
 
 - (void)finalize {
     [self close];
