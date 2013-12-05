@@ -19,11 +19,15 @@
 
 @implementation FMDatabasePool
 
-+ (id)databasePoolWithPath:(NSString*)aPath {
++ (instancetype)databasePoolWithPath:(NSString*)aPath {
     return FMDBReturnAutoreleased([[self alloc] initWithPath:aPath]);
 }
 
-- (id)initWithPath:(NSString*)aPath {
+- (instancetype)init {
+    return [self initWithPath:nil];
+}
+
+- (instancetype)initWithPath:(NSString*)aPath {
     
     self = [super init];
     
@@ -225,11 +229,10 @@
     block(db, &shouldRollback);
     
     if (shouldRollback) {
+        // We need to rollback and release this savepoint to remove it
         [db rollbackToSavePointWithName:name error:&err];
     }
-    else {
-        [db releaseSavePointWithName:name error:&err];
-    }
+    [db releaseSavePointWithName:name error:&err];
     
     [self pushDatabaseBackInPool:db];
     

@@ -7,19 +7,19 @@
 @end
 
 
-@interface FMResultSet (Private)
-- (NSMutableDictionary *)columnNameToIndexMap;
-- (void)setColumnNameToIndexMap:(NSMutableDictionary *)value;
-@end
-
 @implementation FMResultSet
+@synthesize query=_query;
+@synthesize statement=_statement;
 
-+ (id)resultSetWithStatement:(FMStatement *)statement usingParentDatabase:(FMDatabase*)aDB {
++ (instancetype)resultSetWithStatement:(FMStatement *)statement usingParentDatabase:(FMDatabase*)aDB {
     
     FMResultSet *rs = [[FMResultSet alloc] init];
     
-    rs.statement = statement;
-    rs.parentDB = aDB;
+    [rs setStatement:statement];
+    [rs setParentDB:aDB];
+    
+    NSParameterAssert(![statement inUse]);
+    [statement setInUse:YES]; // weak reference
     
     return FMDBReturnAutoreleased(rs);
 }
@@ -58,20 +58,17 @@
     return sqlite3_column_count([_statement statement]);
 }
 
-- (void)setupColumnNames {
-    
+- (NSMutableDictionary *)columnNameToIndexMap {
     if (!_columnNameToIndexMap) {
-        self.columnNameToIndexMap = [NSMutableDictionary dictionary];
-    }    
-    
-    int columnCount = sqlite3_column_count([_statement statement]);
-    
-    int columnIdx = 0;
-    for (columnIdx = 0; columnIdx < columnCount; columnIdx++) {
-        [_columnNameToIndexMap setObject:[NSNumber numberWithInt:columnIdx]
-                                 forKey:[[NSString stringWithUTF8String:sqlite3_column_name([_statement statement], columnIdx)] lowercaseString]];
+        int columnCount = sqlite3_column_count([_statement statement]);
+        _columnNameToIndexMap = [[NSMutableDictionary alloc] initWithCapacity:(NSUInteger)columnCount];
+        int columnIdx = 0;
+        for (columnIdx = 0; columnIdx < columnCount; columnIdx++) {
+            [_columnNameToIndexMap setObject:[NSNumber numberWithInt:columnIdx]
+                                      forKey:[[NSString stringWithUTF8String:sqlite3_column_name([_statement statement], columnIdx)] lowercaseString]];
+        }
     }
-    _columnNamesSetup = YES;
+    return _columnNameToIndexMap;
 }
 
 - (void)kvcMagic:(id)object {
@@ -102,11 +99,7 @@
     if (num_cols > 0) {
         NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:num_cols];
         
-        if (!_columnNamesSetup) {
-            [self setupColumnNames];
-        }
-        
-        NSEnumerator *columnNames = [_columnNameToIndexMap keyEnumerator];
+        NSEnumerator *columnNames = [[self columnNameToIndexMap] keyEnumerator];
         NSString *columnName = nil;
         while ((columnName = [columnNames nextObject])) {
             id objectValue = [self objectForColumnName:columnName];
@@ -174,7 +167,7 @@
                     NSLog(@"Unexpected result from sqlite3_reset (%d) rs", rc);
                 }
             }
-            usleep(20);
+            usleep(FMDatabaseSQLiteBusyMicrosecondsTimeout);
             
             if ([_parentDB busyRetryTimeout] && (numberOfRetries++ > [_parentDB busyRetryTimeout])) {
                 
@@ -216,14 +209,9 @@
 }
 
 - (int)columnIndexForName:(NSString*)columnName {
-    
-    if (!_columnNamesSetup) {
-        [self setupColumnNames];
-    }
-    
     columnName = [columnName lowercaseString];
     
-    NSNumber *n = [_columnNameToIndexMap objectForKey:columnName];
+    NSNumber *n = [[self columnNameToIndexMap] objectForKey:columnName];
     
     if (n) {
         return [n intValue];
@@ -314,7 +302,7 @@
         return nil;
     }
     
-    return [NSDate dateWithTimeIntervalSince1970:[self doubleForColumnIndex:columnIdx]];
+	return [_parentDB hasDateFormatter] ? [_parentDB dateFromString:[self stringForColumnIndex:columnIdx]] : [NSDate dateWithTimeIntervalSince1970:[self doubleForColumnIndex:columnIdx]];
 }
 
 
@@ -414,6 +402,14 @@
 
 - (void)setParentDB:(FMDatabase *)newDb {
     _parentDB = newDb;
+}
+
+- (id)objectAtIndexedSubscript:(int)columnIdx {
+    return [self objectForColumnIndex:columnIdx];
+}
+
+- (id)objectForKeyedSubscript:(NSString *)columnName {
+    return [self objectForColumnName:columnName];
 }
 
 
