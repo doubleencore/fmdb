@@ -18,6 +18,10 @@
 
 
 @implementation FMDatabasePool
+@synthesize path=_path;
+@synthesize delegate=_delegate;
+@synthesize maximumNumberOfDatabasesToCreate=_maximumNumberOfDatabasesToCreate;
+
 
 + (instancetype)databasePoolWithPath:(NSString*)aPath {
     return FMDBReturnAutoreleased([[self alloc] initWithPath:aPath]);

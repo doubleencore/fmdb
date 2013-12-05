@@ -188,7 +188,7 @@ return ret;
     
     while (keepTrying == YES) {
         keepTrying = NO;
-        int rc = sqlite3_prepare_v2(self.db, [sql UTF8String], -1, &pStmt, 0);
+        int rc = sqlite3_prepare_v2(_db, [sql UTF8String], -1, &pStmt, 0);
         if (rc == SQLITE_BUSY || rc == SQLITE_LOCKED) {
             keepTrying = YES;
             usleep(FMDatabaseSQLiteBusyMicrosecondsTimeout);
