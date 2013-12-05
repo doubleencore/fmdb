@@ -29,15 +29,22 @@
  in the main.m file.
  */
 
-@interface FMDatabasePool : NSObject
+@interface FMDatabasePool : NSObject {
+    NSString            *_path;
+    
+    dispatch_queue_t    _lockQueue;
+    
+    NSMutableArray      *_databaseInPool;
+    NSMutableArray      *_databaseOutPool;
+    
+    __unsafe_unretained id _delegate;
+    
+    NSUInteger          _maximumNumberOfDatabasesToCreate;
+}
 
-@property (atomic) NSString *path;
-@property (atomic) id delegate;
-@property (atomic) NSUInteger maximumNumberOfDatabasesToCreate;
-
-@property (nonatomic) dispatch_queue_t lockQueue;
-@property (nonatomic) NSMutableArray *databaseInPool;
-@property (nonatomic) NSMutableArray *databaseOutPool;
+@property (atomic, retain) NSString *path;
+@property (atomic, assign) id delegate;
+@property (atomic, assign) NSUInteger maximumNumberOfDatabasesToCreate;
 
 ///---------------------
 /// @name Initialization
